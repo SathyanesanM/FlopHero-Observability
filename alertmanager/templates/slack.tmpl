@@ -1,0 +1,17 @@
+{{ define "slack.default.title" }}
+{{ .Status | toUpper }} - {{ .CommonLabels.alertname }} - {{ .CommonLabels.environment }}
+{{ end }}
+
+{{ define "slack.default.text" }}
+{{ range .Alerts }}
+*Alert:* {{ .Labels.alertname }}
+*Environment:* {{ .Labels.environment }}
+*Severity:* {{ .Labels.severity }}
+*Summary:* {{ .Annotations.summary }}
+*Description:* {{ .Annotations.description }}
+
+*Quick Links:*
+• <https://stackmonitor.gametrainer.dev/explore?orgId=1&left=%7B%22datasource%22%3A%22loki%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22expr%22%3A%22%7Benvironment%3D%5C%22{{ .Labels.environment }}%5C%22%7D%22%7D%5D%7D|{{ .Labels.environment }} Logs>
+{{ if .Labels.instance }}• <https://stackmonitor.gametrainer.dev/d/node-exporter/node-exporter?var-instance={{ .Labels.instance }}|Node Metrics>{{ end }}
+{{ end }}
+{{ end }}

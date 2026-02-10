@@ -1,0 +1,101 @@
+# YACE - Yet Another CloudWatch Exporter
+# FlopHero Observability Stack
+
+apiVersion: v1alpha1
+
+sts-region: us-east-1
+
+discovery:
+  exportedTagsOnMetrics:
+    AWS/RDS:
+      - DBInstanceIdentifier
+      - Environment
+
+  jobs:
+    # ==========================================================================
+    # RDS - Database Metrics (Dev Account - us-east-1)
+    # ==========================================================================
+    - type: AWS/RDS
+      regions:
+        - us-east-1
+      roles:
+        - roleArn: arn:aws:iam::928452448115:role/Rol_Prometheus_CloudWatchExporter_CrossAccount_Assumable
+      metrics:
+        - name: CPUUtilization
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: DatabaseConnections
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: FreeableMemory
+          statistics: [Average, Minimum]
+          period: 300
+          length: 600
+        - name: ReadIOPS
+          statistics: [Average]
+          period: 300
+          length: 600
+        - name: WriteIOPS
+          statistics: [Average]
+          period: 300
+          length: 600
+        - name: FreeStorageSpace
+          statistics: [Average, Minimum]
+          period: 300
+          length: 600
+
+    # ==========================================================================
+    # RDS - Database Metrics (Prod Account - eu-west-1)
+    # ==========================================================================
+    - type: AWS/RDS
+      regions:
+        - eu-west-1
+      roles:
+        - roleArn: arn:aws:iam::133585426375:role/Rol_Prometheus_CloudWatchExporter_CrossAccount_Assumable
+      metrics:
+        - name: CPUUtilization
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: DatabaseConnections
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: FreeableMemory
+          statistics: [Average, Minimum]
+          period: 300
+          length: 600
+        - name: ReadIOPS
+          statistics: [Average]
+          period: 300
+          length: 600
+        - name: WriteIOPS
+          statistics: [Average]
+          period: 300
+          length: 600
+        - name: FreeStorageSpace
+          statistics: [Average, Minimum]
+          period: 300
+          length: 600
+
+    # ==========================================================================
+    # RDS - Database Metrics (Monitoring Account - us-east-1)
+    # ==========================================================================
+    - type: AWS/RDS
+      regions:
+        - us-east-1
+      metrics:
+        - name: CPUUtilization
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: DatabaseConnections
+          statistics: [Average, Maximum]
+          period: 300
+          length: 600
+        - name: FreeableMemory
+          statistics: [Average, Minimum]
+          period: 300
+          length: 600

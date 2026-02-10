@@ -1,0 +1,70 @@
+# Self-Monitoring Alerts
+# Alerts for the observability stack itself
+
+groups:
+  - name: self-monitoring
+    rules:
+      # Prometheus
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: Monitoring
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus instance is not responding."
+
+      - alert: PrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: warning
+          environment: Monitoring
+        annotations:
+          summary: "Prometheus config reload failed"
+          description: "Prometheus failed to reload its configuration."
+
+      # Alertmanager
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: Monitoring
+        annotations:
+          summary: "Alertmanager is down"
+          description: "Alertmanager instance is not responding."
+
+      # Loki
+      - alert: LokiDown
+        expr: up{job="loki"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: Monitoring
+        annotations:
+          summary: "Loki is down"
+          description: "Loki instance is not responding."
+
+      # Grafana
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: Monitoring
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana instance is not responding."
+
+      # YACE
+      - alert: YACEDown
+        expr: up{job="yace-cloudwatch"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          environment: Monitoring
+        annotations:
+          summary: "YACE CloudWatch exporter is down"
+          description: "YACE is not responding. CloudWatch metrics may be stale."

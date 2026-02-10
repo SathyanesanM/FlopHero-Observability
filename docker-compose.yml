@@ -1,0 +1,159 @@
+version: '3.8'
+
+# FlopHero Observability Stack
+# GPL Stack: Grafana, Prometheus, Loki + Alertmanager, YACE, Blackbox
+
+services:
+  # ==========================================================================
+  # Nginx - Reverse Proxy with SSL
+  # ==========================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - grafana
+      - prometheus
+      - alertmanager
+      - loki
+    networks:
+      - observability
+
+  # ==========================================================================
+  # Grafana - Dashboards and Visualization
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:11.5.2
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-https://stackmonitor.gametrainer.dev}
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-piechart-panel
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      - GF_ALERTING_ENABLED=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - observability
+
+  # ==========================================================================
+  # Prometheus - Metrics Collection
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=60d'
+      - '--web.enable-lifecycle'
+      - '--web.external-url=${PROMETHEUS_EXTERNAL_URL:-https://stackmonitor.gametrainer.dev/prometheus/}'
+      - '--web.route-prefix=/'
+    volumes:
+      - prometheus-data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+    networks:
+      - observability
+
+  # ==========================================================================
+  # Alertmanager - Alert Routing and Notifications
+  # ==========================================================================
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=${ALERTMANAGER_EXTERNAL_URL:-https://stackmonitor.gametrainer.dev/alertmanager/}'
+      - '--web.route-prefix=/'
+    volumes:
+      - alertmanager-data:/alertmanager
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/templates:/etc/alertmanager/templates:ro
+    networks:
+      - observability
+
+  # ==========================================================================
+  # Loki - Log Aggregation
+  # ==========================================================================
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - loki-data:/loki
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - ./loki/rules:/loki/rules:ro
+    ports:
+      - "3100:3100"  # Expose for remote log ingestion
+    networks:
+      - observability
+
+  # ==========================================================================
+  # YACE - Yet Another CloudWatch Exporter
+  # ==========================================================================
+  yace:
+    image: ghcr.io/nerdswords/yet-another-cloudwatch-exporter:v0.61.0
+    container_name: yace
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/yace/config.yaml'
+      - '--listen-address=:5000'
+    volumes:
+      - ./yace/config.yaml:/etc/yace/config.yaml:ro
+      - ~/.aws:/root/.aws:ro
+    environment:
+      - AWS_SDK_LOAD_CONFIG=true
+    networks:
+      - observability
+
+  # ==========================================================================
+  # Blackbox Exporter - Synthetic Monitoring
+  # ==========================================================================
+  blackbox:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: blackbox
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/blackbox/blackbox.yml'
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    networks:
+      - observability
+
+# ==========================================================================
+# Networks
+# ==========================================================================
+networks:
+  observability:
+    driver: bridge
+
+# ==========================================================================
+# Volumes - Persistent Data
+# ==========================================================================
+volumes:
+  grafana-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  loki-data:
+    driver: local
