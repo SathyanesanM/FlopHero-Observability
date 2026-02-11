@@ -84,11 +84,57 @@ scrape_configs:
         replacement: blackbox:9115
 
   # ==========================================================================
-  # Node Exporter - EC2 Instances (to be configured)
+  # Staging - Node Exporter (GameTrainer-STAGE-PGT)
   # ==========================================================================
-  # TODO: Add EC2 service discovery for node exporters
-  
+  - job_name: 'node-staging'
+    static_configs:
+      - targets: ['172.39.10.105:9100']
+        labels:
+          environment: 'Staging'
+          instance: 'GameTrainer-STAGE-PGT'
+          job: 'node'
+
   # ==========================================================================
-  # cAdvisor - ECS Container Metrics (to be configured)
+  # Staging EC2 - cAdvisor (GameTrainer-STAGE-PGT)
   # ==========================================================================
-  # TODO: Add EC2 service discovery for cAdvisor on ECS instances
+  - job_name: 'cadvisor-staging-ec2'
+    static_configs:
+      - targets: ['172.39.10.105:8081']
+        labels:
+          environment: 'Staging'
+          instance: 'GameTrainer-STAGE-PGT'
+          job: 'cadvisor'
+
+  # ==========================================================================
+  # Staging ECS - cAdvisor (ecs-cluster-dev-stage)
+  # ==========================================================================
+  - job_name: 'cadvisor-staging-ecs'
+    static_configs:
+      - targets:
+          - '172.39.32.241:8081'
+          - '172.39.19.161:8081'
+          - '172.39.19.242:8081'
+          - '172.39.12.31:8081'
+        labels:
+          environment: 'Staging'
+          job: 'cadvisor-ecs'
+    metric_relabel_configs:
+      # Drop high-cardinality and system containers
+      - source_labels: [id]
+        regex: '^$'
+        action: drop
+      - source_labels: [__name__]
+        regex: 'container_.*'
+        action: keep
+      - regex: 'container_label_(?!com_amazonaws_ecs_container_name|com_amazonaws_ecs_task_definition_family).*'
+        action: labeldrop
+      - source_labels: [container_label_com_amazonaws_ecs_container_name]
+        regex: '(.+)'
+        target_label: container_name
+        replacement: '$1'
+      - source_labels: [container_label_com_amazonaws_ecs_task_definition_family]
+        regex: '(.+)'
+        target_label: task_definition
+        replacement: '$1'
+      - regex: '^id$|^image$'
+        action: labeldrop
