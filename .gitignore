@@ -7,6 +7,9 @@ nginx/ssl/*.pem
 nginx/ssl/*.key
 nginx/ssl/*.crt
 
+# Nginx basic auth (created on server)
+nginx/.htpasswd
+
 # Docker volumes (if mounted locally)
 data/
 
