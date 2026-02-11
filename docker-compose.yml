@@ -9,7 +9,7 @@ services:
   # ==========================================================================
   nginx:
     image: nginx:alpine
-    container_name: nginx
+    container_name: svc-mon-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -30,7 +30,7 @@ services:
   # ==========================================================================
   grafana:
     image: grafana/grafana:11.5.2
-    container_name: grafana
+    container_name: svc-mon-grafana
     restart: unless-stopped
     environment:
       - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-https://stackmonitor.gametrainer.dev}
@@ -54,7 +54,7 @@ services:
   # ==========================================================================
   prometheus:
     image: prom/prometheus:v2.51.0
-    container_name: prometheus
+    container_name: svc-mon-prometheus
     restart: unless-stopped
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -75,7 +75,7 @@ services:
   # ==========================================================================
   alertmanager:
     image: prom/alertmanager:v0.27.0
-    container_name: alertmanager
+    container_name: svc-mon-alertmanager
     restart: unless-stopped
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
@@ -94,7 +94,7 @@ services:
   # ==========================================================================
   loki:
     image: grafana/loki:3.0.0
-    container_name: loki
+    container_name: svc-mon-loki
     restart: unless-stopped
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
@@ -111,7 +111,7 @@ services:
   # ==========================================================================
   yace:
     image: ghcr.io/nerdswords/yet-another-cloudwatch-exporter:v0.61.0
-    container_name: yace
+    container_name: svc-mon-yace
     restart: unless-stopped
     command:
       - '--config.file=/etc/yace/config.yaml'
@@ -129,7 +129,7 @@ services:
   # ==========================================================================
   blackbox:
     image: prom/blackbox-exporter:v0.25.0
-    container_name: blackbox
+    container_name: svc-mon-blackbox
     restart: unless-stopped
     command:
       - '--config.file=/etc/blackbox/blackbox.yml'

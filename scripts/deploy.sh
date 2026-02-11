@@ -45,7 +45,7 @@ sleep 10
 # Health check
 echo ""
 echo "=== Health Check ==="
-for service in grafana prometheus alertmanager loki yace blackbox nginx; do
+for service in svc-mon-grafana svc-mon-prometheus svc-mon-alertmanager svc-mon-loki svc-mon-yace svc-mon-blackbox svc-mon-nginx; do
     status=$(docker inspect --format='{{.State.Status}}' $service 2>/dev/null || echo "not found")
     echo "$service: $status"
 done
