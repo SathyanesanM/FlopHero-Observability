@@ -119,15 +119,7 @@ scrape_configs:
           environment: 'Staging'
           job: 'cadvisor-ecs'
     metric_relabel_configs:
-      # Drop high-cardinality and system containers
-      - source_labels: [id]
-        regex: '^$'
-        action: drop
-      - source_labels: [__name__]
-        regex: 'container_.*'
-        action: keep
-      - regex: 'container_label_(?!com_amazonaws_ecs_container_name|com_amazonaws_ecs_task_definition_family).*'
-        action: labeldrop
+      # Extract ECS labels before dropping container_label_*
       - source_labels: [container_label_com_amazonaws_ecs_container_name]
         regex: '(.+)'
         target_label: container_name
@@ -136,5 +128,14 @@ scrape_configs:
         regex: '(.+)'
         target_label: task_definition
         replacement: '$1'
+      # Drop high-cardinality labels (RE2 does not support negative lookahead)
+      - regex: 'container_label_.*'
+        action: labeldrop
       - regex: '^id$|^image$'
         action: labeldrop
+      - source_labels: [id]
+        regex: '^$'
+        action: drop
+      - source_labels: [__name__]
+        regex: 'container_.*'
+        action: keep
